@@ -1,0 +1,4 @@
+.build/
+*.swp
+*.tar.gz
+Data-Morph-*
