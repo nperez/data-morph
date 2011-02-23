@@ -1,4 +1,7 @@
 package Data::Morph;
+
+#ABSTRACT: Morph data from one source to another
+
 use Moose;
 use MooseX::Types::Moose(':all');
 use MooseX::Types::Structured(':all');
@@ -6,12 +9,121 @@ use MooseX::Params::Validate;
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 
+=attribute_public recto
+
+    is: ro, does: Data::Morph::Role::Backend, required: 1
+
+One of the required backends necessary for data morphing. The term recto comes
+from the terms meaning front and back of a page in a bound item such as a book.
+The provided instance to this attribute via constructor argument will need to
+consume the L<Data::Morph::Role::Backend> role.
+
+Which backend that ends up in this slot or the L</verso> slot doesn't really
+matter. Data morphing is a two way street of awesomeness that operates based on
+the type of the input.
+
+=cut
+
+=attribute_public verso
+
+    is: ro, does: Data::Morph::Role::Backend, required: 1
+
+One of the required backends necessary for data morphing. The term verso comes
+from the terms meaning front and back of a page in a bound item such as a book.
+The provided instance to this attribute via constructor argument will need to
+consume the L<Data::Morph::Role::Backend> role.
+
+Which backend that ends up in this slot or the L</recto> slot doesn't really
+matter. Data morphing is a two way street of awesomeness that operates based on
+the type of the input.
+
+=cut
+
 has [qw/recto verso/] =>
 (
     is => 'ro',
     does => 'Data::Morph::Role::Backend',
     required => 1,
 );
+
+=attribute_public map
+
+    is: ro, isa: ArrayRef
+    [
+        Dict
+        [
+            verso =>
+            (
+                Str|Dict
+                [
+                    read => (Str|Tuple[Str, CodeRef]),
+                    write => (Str|Tuple[Str, CodeRef]),
+                ]
+            ),
+            recto =>
+            (
+                Str|Dict
+                [
+                    read => (Str|Tuple[Str, CodeRef]),
+                    write => (Str|Tuple[Str, CodeRef]),
+                ]
+            )
+        ]
+    ],
+    required: 1
+
+In order to properly morph data from one source to another, a map needs to be
+provided that meets the above type constraint. It looks like a bunch of
+gobbledygook, but the structure and semantics are rather simple.
+
+A map is nothing more than a array of hashes that define directives to the recto
+and verso stored backends. Each directive to a backend can define a simple
+string to indicate to use the same key for reading and writing values.
+Otherwise, a hash is used where the keys 'read' and 'write' are used. And if
+there should be a post or pre process that occurs for a read or write,
+respectively, the value for 'read' or 'write' should be an array of the
+directive and a coderef to be executed. The coderef will receive the value and
+only the value. The return value from the coderef will used post read or pre
+write.
+
+The directives are specific to which ever backends are being used. Each has
+their own exepctation.
+
+Quick example of a map between two object backends:
+
+    my $map = [
+        {
+            recto => 
+            {
+                read => 'get_foo',
+                write => 'set_foo',
+            }
+            verso => 'foo',
+        },
+        {
+            recto =>
+            {
+                read => 'get_bar',
+                write => [ 'set_bar', sub {
+                    my $f = shift(@_); $f =~ s/^123//; $f }],
+            }
+            verso =>
+            {
+                read => 'bar',
+                write => [ 'bar', sub { '123' . shift(@_) } ],
+            }
+        },
+    ];
+
+The recto side uses get_* and set_* methods (or attribute readers/writers),
+while the verso side uses a single method or attribute for reading and writing.
+Also note that the 'bar' value gets a string appended on the verso side that
+needs to be stripped before morphing back.
+
+Each hash in the map array is executed in the order in which it is defined. This
+is important if there are order dependant operations.
+
+=cut
 
 has map =>
 (
@@ -40,6 +152,20 @@ has map =>
     ],
     required => 1,
 );
+
+=attribute_private morpher
+
+    is: ro, isa: HashRef, builder: _build_morpher, lazy: 1
+
+This attribute holds the precompiled hash of states used for the
+L<Moose::Util::TypeConstraints/match_on_type> matching that takes place inside
+the L</morph> method. The keys are the
+L<Data::Morph::Role::Backend/input_type>s defined in the backends, while the
+values are coderefs that generate an instance for the opposite side of the
+morph, read the values from the input, and writes the values into the new
+instance.
+
+=cut
 
 has morpher =>
 (
@@ -140,6 +266,14 @@ sub _build_morpher
     return $hash;
 }
 
+=method_public morph
+
+    (Defined)
+
+This method is where the magic happens. The passed in instance is subjected to L<Moose::Util::TypeConstraints/match_on_type> with the value from L</morpher> used as the potential execution branches. Whether it is recto -> verso or verso -> recto, the map is read and a return value produced.
+
+=cut
+
 sub morph
 {
     my ($self, $object) = pos_validated_list
@@ -154,3 +288,75 @@ sub morph
 
 1;
 __END__
+=head1 SYNOPSIS
+    
+    use Data::Morph;
+    use Data::Morph::Backend::Object;
+    use Data::Morph::Backend::Raw;
+
+    {
+        package Foo;
+        use Moose;
+        use namespace::autoclean;
+
+        has foo => ( is => 'ro', isa => 'Int', default => 1,
+            writer => 'set_foo' );
+        has bar => ( is => 'rw', isa => 'Str', default => '123ABC');
+        has flarg => ( is => 'rw', isa => 'Str', default => 'boo');
+        1;
+    }
+
+    my $map1 =
+    [
+        {
+            recto =>
+            {
+                read => 'foo',
+                write => 'set_foo',
+            },
+            verso => '/FOO',
+        },
+        {
+            recto =>
+            {
+                read => ['bar', sub { my ($f) = @_; $f =~ s/\d+//; $f } ],
+                write => [ 'bar', sub { "123".shift(@_) } ], # pre write
+            },
+            verso => '/BAR',
+        },
+        {
+            recto => 'flarg',
+            verso => '/some/path/goes/here/flarg'
+        },
+    ];
+
+    my $obj_backend = Data::Morph::Backend::Object->new(new_instance => sub {
+        Foo->new() });
+    my $raw_backend = Data::Morph::Backend::Raw->new();
+
+    my $morpher = Data::Morph->new(
+        recto => $obj_backend,
+        verso => $raw_backend,
+        map => $map1
+    );
+
+    my $foo1 = Foo->new();
+    my $hash = $morpher->morph($foo1);
+    my $foo2 = $morpher->morph($hash);
+
+    # While not the same instance, the values of the attributes for $foo1 and
+    #   $foo2 match
+
+=head1 DESCRIPTION
+
+Data::Morph is a module that provides a solution for translating data from one
+source to another via maps and backends. It is written such that data can be
+shifted both directions. The L</SYNOPSIS> demonstrates a somewhat trivial
+example of using the L<Data::Morph::Backend::Object> and
+L<Data::Morph::Backend::Raw> that round trips the defaults out the Foo class to
+a hash and back again. Not shown is the other shipped backend
+L<Data::Morph::Backend::DBIC> which operates on L<DBIx::Class::Row> objects. If
+a more specialized backend is needed take a look at consuming
+L<Data::Morph::Role::Backend>. 
+
+=cut

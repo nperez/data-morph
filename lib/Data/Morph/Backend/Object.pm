@@ -1,8 +1,17 @@
 package Data::Morph::Backend::Object;
+
+#ABSTRACT: Provides a Data::Morph backend for talking to objects
+
 use Moose;
 use MooseX::Types::Moose(':all');
 use MooseX::Params::Validate;
 use namespace::autoclean;
+
+=method_public epilogue
+
+Implements L<Data::Morph::Role::Backend/epilogue> as a no-op
+
+=cut
 
 sub epilogue { }
 
@@ -21,5 +30,11 @@ with 'Data::Morph::Role::Backend' =>
     },
 };
 
+__PACKAGE__->meta->make_immutable();
 1;
 __END__
+
+=head1 DESCRIPTION
+
+Data::Morph::Backend::Object provides a backend for interacting with arbitrary
+objects. Directives defined in map should correspond to methods or attributes
