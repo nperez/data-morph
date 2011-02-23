@@ -25,6 +25,7 @@ use DBD::SQLite;
     use base 'DBIx::Class::Core';
     __PACKAGE__->table('blah');
     __PACKAGE__->add_columns(qw/some_foo bar_zoop ker_flarg_fluffle/);
+    __PACKAGE__->set_primary_key('some_foo');
     1;
 }
 
