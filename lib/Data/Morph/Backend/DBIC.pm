@@ -46,7 +46,7 @@ has auto_insert =>
 
     is: ro, isa: CodeRef
 
-This attribute overrides what is provided in L</Data::Morph::Role::Backend> and
+This attribute overrides what is provided in L<Data::Morph::Role::Backend> and
 sets a default that returns a coderef that uses L</result_set> to return a new
 row using L<DBIx::Class::ResultSet/new_result>
 
@@ -123,7 +123,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Data::Morph::Backend::DBIC implements a L</Data::Morph> backend that talks to a
+Data::Morph::Backend::DBIC implements a L<Data::Morph> backend that talks to a
 database via DBIx::Class. New instances or rows are created from the passed in
 L<DBIx::Class::ResultSet> to the constructor. Values are set and retrieved from
 the row using the following logic: If there is an accessor, use it, if not, see

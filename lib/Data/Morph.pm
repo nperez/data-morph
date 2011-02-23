@@ -270,7 +270,10 @@ sub _build_morpher
 
     (Defined)
 
-This method is where the magic happens. The passed in instance is subjected to L<Moose::Util::TypeConstraints/match_on_type> with the value from L</morpher> used as the potential execution branches. Whether it is recto -> verso or verso -> recto, the map is read and a return value produced.
+This method is where the magic happens. The passed in instance is subjected to
+L<Moose::Util::TypeConstraints/match_on_type> with the value from L</morpher>
+used as the potential execution branches. Whether it is recto -> verso or verso
+-> recto, the map is read and a return value produced.
 
 =cut
 
