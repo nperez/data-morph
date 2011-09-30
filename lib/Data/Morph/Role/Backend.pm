@@ -3,6 +3,8 @@ use MooseX::Role::Parameterized;
 use MooseX::Types::Moose(':all');
 use MooseX::Params::Validate;
 
+#ABSTRACT: Provides a role to consume to develop specialized backends
+
 =role_parameter input_type
 
     isa: Moose::Meta::TypeConstraint
