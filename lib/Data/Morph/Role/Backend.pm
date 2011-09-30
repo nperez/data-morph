@@ -72,7 +72,9 @@ rather on individual properties of it, do it here.
     is: ro, isa: CodeRef, required: 1
 
 Each backend should provide a coderef or require one upon construction that is
-an instance factory. The instances returned must match L</input_type>
+an instance factory. The instances returned must match L</input_type>. The
+instance factory will receive the raw input as the only argument to allow for
+dynamic instance creation.
 
 =cut
 
@@ -101,14 +103,15 @@ types other than the default provided at role consumption
 
 =method_public generate_instance
 
-This method access L</new_instance> and invokes it, returning its return value
+This method access L</new_instance> and invokes it with the provided raw input
+as an argument, returning its return value
 
 =cut
 
     method generate_instance => sub
     {
-        my ($self) = @_;
-        return $self->new_instance->();
+        my ($self, $input) = @_;
+        return $self->new_instance->($input);
     };
 
 =method_public retrieve

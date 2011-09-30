@@ -186,7 +186,7 @@ sub _build_morpher
     {
         my ($input) = @_;
 
-        my $instance = $verso->generate_instance();
+        my $instance = $verso->generate_instance($input);
         foreach my $entry (@$map)
         {
             my ($recto_map, $verso_map) = @$entry{qw/recto verso/};
@@ -226,7 +226,7 @@ sub _build_morpher
     {
         my ($input) = @_;
 
-        my $instance = $recto->generate_instance();
+        my $instance = $recto->generate_instance($input);
         foreach my $entry (@$map)
         {
             my ($recto_map, $verso_map) = @$entry{qw/recto verso/};
