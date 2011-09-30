@@ -9,6 +9,7 @@ use MooseX::Params::Validate;
 use Devel::PartialDump('dump');
 use namespace::autoclean;
 use DBIx::Class;
+use Scalar::Util('weaken');
 
 =attribute_public result_set
 
@@ -44,11 +45,11 @@ has auto_insert =>
 
 =attribute_public new_instance
 
-    is: ro, isa: CodeRef
+    is: ro, isa: CodeRef, lazy: 1, builder: _build_new_instance
 
 This attribute overrides what is provided in L<Data::Morph::Role::Backend> and
-sets a default that returns a coderef that uses L</result_set> to return a new
-row using L<DBIx::Class::ResultSet/new_result>
+uses a builder method that returns a coderef that uses L</result_set> to return
+a new row using L<DBIx::Class::ResultSet/new_result>
 
 =cut
 
@@ -56,12 +57,25 @@ has new_instance =>
 (
     is => 'ro',
     isa => CodeRef,
-    default => sub
-    {
-        my ($self) = @_;
-        return sub { $self->result_set->new_result({}) };
-    },
+    lazy => 1,
+    builder => '_build_new_instance',
 );
+
+=method_protected _build_new_instance
+
+This is the builder method for L</new_instance>. If special logic is needed in
+creation of the instance factory, simply override or advise this method as
+needed. By default, it returns a CodeRef that builds L<DBIx::Class::Row>
+objects using L<DBIx::Class::ResultSet/new_result> upon the L</result_set>
+
+=cut
+
+sub _build_new_instance
+{
+    my ($self) = @_;
+    weaken($self);
+    return sub { $self->result_set->new_result({}) };
+}
 
 =method_public epilogue
 
