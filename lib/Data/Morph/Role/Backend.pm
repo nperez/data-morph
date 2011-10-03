@@ -145,7 +145,7 @@ L</get_val>. And its return value returned.
 
 =method_public store
 
-    (INSTANCE, Defined, Str, CodeRef?)
+    (INSTANCE, Any, Str, CodeRef?)
 
 This method takes the Defined value and sets it into the instance using the Str
 key. The optional coderef parameter is what is passed if defined in the map in
@@ -162,7 +162,7 @@ return value ultimately used in the storage operation, L</set_val>
             \@_,
             {isa => __PACKAGE__},
             {isa => $p->input_type},
-            {isa => Defined},
+            {isa => Any},
             {isa => Str},
             {isa => CodeRef, optional => 1}
         );

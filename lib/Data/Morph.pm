@@ -136,16 +136,16 @@ has map =>
             (
                 Str|Dict
                 [
-                    read => (Str|Tuple[Str, CodeRef]),
-                    write => (Str|Tuple[Str, CodeRef]),
+                    read => (Optional[Str|Tuple[Str, CodeRef]]),
+                    write => (Optional[Str|Tuple[Str, CodeRef]]),
                 ]
             ),
             recto =>
             (
                 Str|Dict
                 [
-                    read => (Str|Tuple[Str, CodeRef]),
-                    write => (Str|Tuple[Str, CodeRef]),
+                    read => (Optional[Str|Tuple[Str, CodeRef]]),
+                    write => (Optional[Str|Tuple[Str, CodeRef]]),
                 ]
             )
         ]
@@ -191,6 +191,9 @@ sub _build_morpher
         {
             my ($recto_map, $verso_map) = @$entry{qw/recto verso/};
 
+            next if ref($verso_map) and
+                (!exists($verso_map->{write}) || !defined($verso_map->{write}));
+
             my $val = $recto->retrieve
             (
                 $input,
@@ -230,6 +233,9 @@ sub _build_morpher
         foreach my $entry (@$map)
         {
             my ($recto_map, $verso_map) = @$entry{qw/recto verso/};
+
+            next if ref($recto_map) and
+                (!exists($recto_map->{write}) || !defined($recto_map->{write}));
 
             my $val = $verso->retrieve
             (

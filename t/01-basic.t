@@ -56,7 +56,11 @@ my $map1 =
             read => ['bar', sub { my ($f) = @_; $f =~ s/\d+//; $f } ], # post read
             write => [ 'bar', sub { "123".shift(@_) } ], # pre write
         },
-        verso => '/BAR',
+        verso =>
+        {
+            read => '/BAR',
+            write => '/BAR',
+        }
     },
     {
         recto => 'flarg',
@@ -213,6 +217,55 @@ try
     is($row2->some_foo, $row->some_foo, 'row data matches foo');
     is($row2->bar_zoop, $row->bar_zoop, 'row data matches bar');
     is($row2->ker_flarg_fluffle, $row->ker_flarg_fluffle, 'row data matches flarg');
+}
+catch
+{
+    fail($_);
+};
+
+try
+{
+    delete $map1->[1]->{verso}->{write};
+    delete $map1->[0]->{recto}->{write};
+
+    my $morpher = Data::Morph->new(
+        recto => $obj_backend,
+        verso => $raw_backend,
+        map => $map1
+    );
+
+    my $foo1 = Foo->new();
+    my $hash = $morpher->morph($foo1);
+
+    is_deeply
+    (
+        $hash,
+        {
+            FOO => 1,
+            some =>
+            {
+                path =>
+                {
+                    goes =>
+                    {
+                        here =>
+                        {
+                            flarg => 'boo'
+                        }
+                    }
+                }
+            }
+        },
+        'Output hash matches what is expected when missing writer'
+    );
+
+    $hash->{FOO} = 9000;
+    $hash->{BAR} = 'ABC';
+    my $foo2 = $morpher->morph($hash);
+
+    isnt($foo2->foo, 9000, 'foo does not match on object');
+    is($foo2->bar, $foo1->bar, 'bar matches on object');
+    is($foo2->flarg, $foo1->flarg, 'flarg matches on object');
 }
 catch
 {
