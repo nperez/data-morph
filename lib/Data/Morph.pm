@@ -3,6 +3,7 @@ package Data::Morph;
 #ABSTRACT: Morph data from one source to another
 
 use Moose;
+use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose(':all');
 use MooseX::Types::Structured(':all');
 use MooseX::Params::Validate;
@@ -56,16 +57,16 @@ has [qw/recto verso/] =>
             (
                 Str|Dict
                 [
-                    read => (Str|Tuple[Str, CodeRef]),
-                    write => (Str|Tuple[Str, CodeRef]),
+                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             ),
             recto =>
             (
                 Str|Dict
                 [
-                    read => (Str|Tuple[Str, CodeRef]),
-                    write => (Str|Tuple[Str, CodeRef]),
+                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             )
         ]
@@ -123,6 +124,34 @@ needs to be stripped before morphing back.
 Each hash in the map array is executed in the order in which it is defined. This
 is important if there are order dependant operations.
 
+If a data element only flows one way through the process, do not define a write
+element for the given recto/verso, but just a read element.
+
+As an example, suppose the object on one side of the transaction needs a constant
+not provided by the incoming data. With read-only elements and a coderef, this
+constant can be provided:
+
+    my $map = [
+        {
+            recto =>
+            {
+                read => 'get_foo',
+                write => 'set_foo',
+            },
+            verso =>
+            {
+                read => [ 'some_key', sub { 42 } ],
+            }
+        }
+    ];
+
+Now when going verso -> recto with the data, for the 'foo' attribute on the
+object, it will always get the constant. When going recto -> verso, there is no
+write defined and so the element is skipped.
+
+Please note that the value of 'some_key' will be discarded due to the post-read
+coderef. Setting the key to undef will ensure just the coderef is executed.
+
 =cut
 
 has map =>
@@ -136,16 +165,16 @@ has map =>
             (
                 Str|Dict
                 [
-                    read => (Optional[Str|Tuple[Str, CodeRef]]),
-                    write => (Optional[Str|Tuple[Str, CodeRef]]),
+                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             ),
             recto =>
             (
                 Str|Dict
                 [
-                    read => (Optional[Str|Tuple[Str, CodeRef]]),
-                    write => (Optional[Str|Tuple[Str, CodeRef]]),
+                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             )
         ]

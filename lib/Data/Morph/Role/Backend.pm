@@ -118,12 +118,15 @@ as an argument, returning its return value
 
 =method_public retrieve
 
-    (INSTANCE, Str, CodeRef?)
+    (INSTANCE, Maybe[Str], CodeRef?)
 
 This method is what fetches the value from the instance using L</get_val>. The
 optional coderef parameter is what is passed in from the map if it is defined
 for a read operation. The coderef must be called with the return value from
 L</get_val>. And its return value returned.
+
+If an undefined key is given but a coderef is defined, the result from the
+coderef will be returned
 
 =cut
 
@@ -134,9 +137,14 @@ L</get_val>. And its return value returned.
             \@_,
             {isa => __PACKAGE__},
             {isa => $p->input_type},
-            {isa => Str},
+            {isa => Maybe[Str]},
             {isa => CodeRef, optional => 1},
         );
+
+        if(!defined($key) && defined($post))
+        {
+            return $post->();
+        }
 
         my $val = $p->get_val->($object, $key);
         $val = $post->($val) if defined($post);
