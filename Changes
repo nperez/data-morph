@@ -2,6 +2,16 @@ Revision history for {{ $dist->name }}: {{ $dist->version }}
 
 {{ $NEXT }}
 
+1.112760  2011-10-03 19:06:52 Europe/Amsterdam
+        Relax the constraint on the store method defined in Role::Backend from
+        Defined to Any
+
+        Allow for one-way transformations by not providing a write within the
+        map for that particular element
+
+        Read elements can now use a tuple of undef+coderef as a special case
+        for supplying OOB data
+
 1.112730  2011-09-30 14:19:35 Europe/Amsterdam
         Tweak generate_instance to receive the raw input to allow for dynamic
         building of instances.
