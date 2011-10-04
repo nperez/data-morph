@@ -57,7 +57,7 @@ has [qw/recto verso/] =>
             (
                 Str|Dict
                 [
-                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    read => union( [Str, Tuple[Maybe[Str], CodeRef]] ),
                     write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             ),
@@ -65,7 +65,7 @@ has [qw/recto verso/] =>
             (
                 Str|Dict
                 [
-                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    read => union( [Str, Tuple[Maybe[Str], CodeRef]] ),
                     write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             )
@@ -165,7 +165,7 @@ has map =>
             (
                 Str|Dict
                 [
-                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    read => union( [Str, Tuple[Maybe[Str], CodeRef]] ),
                     write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             ),
@@ -173,7 +173,7 @@ has map =>
             (
                 Str|Dict
                 [
-                    read => union( [Maybe[Str], Tuple[Str, CodeRef]] ),
+                    read => union( [Str, Tuple[Maybe[Str], CodeRef]] ),
                     write => Optional[Str|Tuple[Str, CodeRef]],
                 ]
             )

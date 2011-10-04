@@ -17,6 +17,7 @@ use DBD::SQLite;
     has foo => ( is => 'ro', isa => 'Int', default => 1, writer => 'set_foo' );
     has bar => ( is => 'rw', isa => 'Str', default => '123ABC');
     has flarg => ( is => 'rw', isa => 'Str', default => 'boo');
+    has zarp => ( is => 'rw', isa => 'Str', default =>  'zoop');
     1;
 }
 
@@ -65,6 +66,17 @@ my $map1 =
     {
         recto => 'flarg',
         verso => '/some/path/goes/here/flarg'
+    },
+    {
+        recto =>
+        {
+            read => [ undef, sub { 'NOTZOOP' } ],
+        },
+        verso =>
+        {
+            read => [ '/ZOOP', sub { 'BIGZOOP' } ],
+            write => '/ZOOP',
+        },
     },
 ];
 
@@ -133,7 +145,8 @@ try
                         }
                     }
                 }
-            }
+            },
+            ZOOP => 'NOTZOOP',
         },
         'Output hash matches what is expected'
     );
@@ -142,7 +155,8 @@ try
 
     is($foo2->foo, $foo1->foo, 'foo matches on object');
     is($foo2->bar, $foo1->bar, 'bar matches on object');
-    is($foo2->flarg, $foo1->flarg, 'bar matches on object');
+    is($foo2->flarg, $foo1->flarg, 'flarg matches on object');
+    is($foo2->zarp, $foo1->zarp, 'zarp matches on object');
 }
 catch
 {
@@ -254,7 +268,8 @@ try
                         }
                     }
                 }
-            }
+            },
+            ZOOP => 'NOTZOOP',
         },
         'Output hash matches what is expected when missing writer'
     );
