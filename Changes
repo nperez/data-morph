@@ -2,6 +2,10 @@ Revision history for {{ $dist->name }}: {{ $dist->version }}
 
 {{ $NEXT }}
 
+1.112770  2011-10-04 10:30:35 Europe/Amsterdam
+        Bug/Doc fix regarding the map constraint. It should have been:
+            union([Str, Tuple[Maybe[Str], CodeRef]])
+
 1.112760  2011-10-03 19:06:52 Europe/Amsterdam
         Relax the constraint on the store method defined in Role::Backend from
         Defined to Any
