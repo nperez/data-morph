@@ -64,13 +64,47 @@ with 'Data::Morph::Role::Backend' =>
             for(0..$#paths)
             {
                 next if $paths[$_] eq '';
-                if($_ == $#paths)
+
+                # handling arrays in path
+                if ($paths[$_] =~ /\[(\d+)\]/)
                 {
-                    $place->{$paths[$_]} = $val;
+                    my $path = $paths[$_];
+                    $path =~ s/\[(\d+)\]//;
+
+                    if($_ == $#paths)
+                    {
+                        $place->{$path}->[$1] = $val;
+                    }
+                    else
+                    {
+                        if (!defined $place->{$path}->[$1])
+                        {
+                            $place = \%{$place->{$path}->[$1] = {}};
+                        }
+                        else
+                        {
+                            $place = \%{$place->{$path}->[$1]};
+                        }
+                    }
+
                 }
                 else
                 {
-                    $place = \%{$place->{$paths[$_]} = {}};
+                    if($_ == $#paths)
+                    {
+                        $place->{$paths[$_]} = $val;
+                    }
+                    else
+                    {
+                        if (!defined $place->{$paths[$_]})
+                        {
+                            $place = \%{$place->{$paths[$_]} = {}};
+                        }
+                        else
+                        {
+                            $place = \%{$place->{$paths[$_]}};
+                        }
+                    }
                 }
             }
         }

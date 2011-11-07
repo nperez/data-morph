@@ -112,6 +112,45 @@ my $map3 =
     },
 ];
 
+my $map4 =
+[
+    {
+        recto => $map2->[0]->{verso},
+        verso => '/A[0]/xxx',
+    },
+    {
+        recto => $map2->[1]->{verso},
+        verso => '/A[0]/yyy',
+    },
+    {
+        recto => $map2->[2]->{verso},
+        verso => '/A[1]/zzz',
+    },
+
+    {
+        recto => $map2->[2]->{verso},
+        verso => '/B[1]',
+    },
+
+    {
+        recto => $map2->[0]->{verso},
+        verso => '/C[4]/xxx',
+    },
+    {
+        recto => $map2->[2]->{verso},
+        verso => '/D[3]',
+    },
+
+    {
+        recto => $map2->[0]->{verso},
+        verso => '/E[0]/xxx/F[0]/aaa',
+    },
+    {
+        recto => $map2->[1]->{verso},
+        verso => '/E[0]/xxx/F[1]/aaa',
+    }
+];
+
 my $obj_backend = Data::Morph::Backend::Object->new(new_instance => sub { Foo->new() });
 my $raw_backend = Data::Morph::Backend::Raw->new();
 my $dbc_backend = Data::Morph::Backend::DBIC->new(result_set => $schema->resultset('Blah'));
@@ -281,6 +320,73 @@ try
     isnt($foo2->foo, 9000, 'foo does not match on object');
     is($foo2->bar, $foo1->bar, 'bar matches on object');
     is($foo2->flarg, $foo1->flarg, 'flarg matches on object');
+}
+catch
+{
+    fail($_);
+};
+
+try
+{
+    my $morpher = Data::Morph->new(
+        recto => $dbc_backend,
+        verso => $raw_backend,
+        map => $map4,
+    );
+
+    my $row = $schema->resultset('Blah')->first();
+
+    my $hash = $morpher->morph($row);
+
+    is_deeply
+    (
+        $hash,
+        {
+            'A' => [
+                {
+                    'xxx' => '1',
+                    'yyy' => 'ABC'
+                },
+                {
+                    'zzz' => 'boo'
+                }
+            ],
+            'D' => [
+                undef,
+                undef,
+                undef,
+                'boo'
+            ],
+            'C' => [
+                undef,
+                undef,
+                undef,
+                undef,
+                {
+                    'xxx' => '1'
+                }
+            ],
+            'E' => [
+                {
+                    'xxx' => {
+                        'F' => [
+                            {
+                                'aaa' => '1'
+                            },
+                            {
+                                'aaa' => 'ABC'
+                            }
+                        ]
+                    }
+                }
+            ],
+            'B' => [
+                undef,
+                'boo'
+            ]
+        },
+        'Output hash matches what is expected'
+    );
 }
 catch
 {
