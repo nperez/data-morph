@@ -364,7 +364,7 @@ __END__
         },
         {
             recto => 'flarg',
-            verso => '/some/path/goes/here/flarg'
+            verso => '/some/path/goes/*[2]/here/flarg'
         },
     ];
 

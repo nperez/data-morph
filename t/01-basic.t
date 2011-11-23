@@ -116,38 +116,42 @@ my $map4 =
 [
     {
         recto => $map2->[0]->{verso},
-        verso => '/A[0]/xxx',
+        verso => '/A/*[0]/xxx',
     },
     {
         recto => $map2->[1]->{verso},
-        verso => '/A[0]/yyy',
+        verso => '/A/*[0]/yyy',
     },
     {
         recto => $map2->[2]->{verso},
-        verso => '/A[1]/zzz',
+        verso => '/A/*[1]/zzz',
     },
 
     {
         recto => $map2->[2]->{verso},
-        verso => '/B[1]',
+        verso => '/B/*[1]',
     },
 
     {
         recto => $map2->[0]->{verso},
-        verso => '/C[4]/xxx',
+        verso => '/C/*[4]/xxx',
     },
     {
         recto => $map2->[2]->{verso},
-        verso => '/D[3]',
+        verso => '/D/*[3]',
     },
 
     {
         recto => $map2->[0]->{verso},
-        verso => '/E[0]/xxx/F[0]/aaa',
+        verso => '/E/*[0]/xxx/F/*[0]/aaa',
     },
     {
         recto => $map2->[1]->{verso},
-        verso => '/E[0]/xxx/F[1]/aaa',
+        verso => '/E/*[0]/xxx/F/*[1]/aaa',
+    },
+    {
+        recto => $map2->[1]->{verso},
+        verso => '/G/*[0]/*[1]/xxx/H/*[1]/aaa',
     }
 ];
 
@@ -337,7 +341,7 @@ try
     my $row = $schema->resultset('Blah')->first();
 
     my $hash = $morpher->morph($row);
-
+    
     is_deeply
     (
         $hash,
@@ -383,7 +387,22 @@ try
             'B' => [
                 undef,
                 'boo'
-            ]
+            ],
+            'G' => [
+                [
+                    undef,
+                    {
+                        'xxx' => {
+                            'H' => [
+                                undef,
+                                {
+                                    'aaa' => 'ABC'
+                                }
+                            ]
+                        }
+                    }
+                ]
+             ],
         },
         'Output hash matches what is expected'
     );

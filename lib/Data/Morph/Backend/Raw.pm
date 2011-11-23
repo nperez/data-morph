@@ -61,30 +61,29 @@ with 'Data::Morph::Role::Backend' =>
         {
             my @paths = split('/', $key);
             my $place = $obj;
+
             for(0..$#paths)
             {
                 next if $paths[$_] eq '';
-
+                my $path = $paths[$_];
+                
                 # handling arrays in path
-                if ($paths[$_] =~ /\[(\d+)\]/)
+                if ($path =~ /\*\[\d+\]/)
                 {
-                    my $path = $paths[$_];
-                    $path =~ s/\[(\d+)\]//;
-
+                    my ($index) = $path =~ /\*\[(\d+)\]/;
+                    
                     if($_ == $#paths)
                     {
-                        $place->{$path}->[$1] = $val;
+                        $place->[$index] = $val;
                     }
                     else
                     {
-                        if (!defined $place->{$path}->[$1])
+                        if (!defined($place->[$index]))
                         {
-                            $place = \%{$place->{$path}->[$1] = {}};
+                            $place->[$index] = ($paths[$_+1] =~ m/\*\[\d+\]/ ? [] : {});
                         }
-                        else
-                        {
-                            $place = \%{$place->{$path}->[$1]};
-                        }
+                        
+                        $place = ref($place->[$index]) eq 'HASH' ? \%{$place->[$index]} : \@{$place->[$index]};
                     }
 
                 }
@@ -92,18 +91,16 @@ with 'Data::Morph::Role::Backend' =>
                 {
                     if($_ == $#paths)
                     {
-                        $place->{$paths[$_]} = $val;
+                        $place->{$path} = $val;
                     }
                     else
                     {
-                        if (!defined $place->{$paths[$_]})
+                        if (!exists($place->{$path}))
                         {
-                            $place = \%{$place->{$paths[$_]} = {}};
+                            $place->{$path} = ($paths[$_+1] =~ m/\*\[\d+\]/ ? [] : {});
                         }
-                        else
-                        {
-                            $place = \%{$place->{$paths[$_]}};
-                        }
+                        
+                        $place = ref($place->{$path}) eq 'HASH' ? \%{$place->{$path}} : \@{$place->{$path}};
                     }
                 }
             }
@@ -121,7 +118,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Data::Morph::Backend::Raw is a backend for L<Data::Morph> that deals with raw Perl hashes. Map directives are more complicated than the other shipped backends like L<Data::Morph::Backend::Object>. The keys should be paths as defined by L<Data::DPath>. Read and write operations can have rather complex dpaths defined for them to set or return values. One special case is when the dpath for a write operation points to a non-existant piece: the substrate is created for you and the value deposited. One caveat is that the path must be dumb simple. It must only be a nested hash dpath (eg, '/some/path/here'). Any fancy filtering or array accesses would require too much effort to parse and generate the structure. Please see L<Data::Morph/SYNOPSIS> for an exmaple of a map using the Raw backend.
+Data::Morph::Backend::Raw is a backend for L<Data::Morph> that deals with raw Perl hashes. Map directives are more complicated than the other shipped backends like L<Data::Morph::Backend::Object>. The keys should be paths as defined by L<Data::DPath>. Read and write operations can have rather complex dpaths defined for them to set or return values. One special case is when the dpath for a write operation points to a non-existant piece: the substrate is created for you and the value deposited. One caveat is that the path must be dumb simple without fancy filtering. Hash and array access (using the syntax '*[1]') into the path is supported. Please see L<Data::Morph/SYNOPSIS> for an exmaple of a map using the Raw backend.
 
 =cut
 
