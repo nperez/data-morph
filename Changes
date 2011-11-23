@@ -2,6 +2,9 @@ Revision history for {{ $dist->name }}: {{ $dist->version }}
 
 {{ $NEXT }}
 
+1.113270  2011-11-23 15:20:25 Europe/Amsterdam
+        Add support for array substrate building and the tests for it
+
 1.112770  2011-10-04 10:30:35 Europe/Amsterdam
         Bug/Doc fix regarding the map constraint. It should have been:
             union([Str, Tuple[Maybe[Str], CodeRef]])
