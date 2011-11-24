@@ -59,7 +59,7 @@ my $map1 =
         },
         verso =>
         {
-            read => '/BAR',
+            read => '/BAR|/bar',
             write => '/BAR',
         }
     },
@@ -155,6 +155,8 @@ my $map4 =
     }
 ];
 
+my $map5 = [ { recto => { read => 'foo', write => 'set_foo' }, verso => '/Bar|/bar' } ];
+
 my $obj_backend = Data::Morph::Backend::Object->new(new_instance => sub { Foo->new() });
 my $raw_backend = Data::Morph::Backend::Raw->new();
 my $dbc_backend = Data::Morph::Backend::DBIC->new(result_set => $schema->resultset('Blah'));
@@ -195,9 +197,12 @@ try
     );
 
     my $foo2 = $morpher->morph($hash);
+    $hash->{bar} = delete $hash->{BAR};
+    my $foo3 = $morpher->morph($hash);
 
     is($foo2->foo, $foo1->foo, 'foo matches on object');
     is($foo2->bar, $foo1->bar, 'bar matches on object');
+    is($foo3->bar, $foo1->bar, 'bar matches with alternation');
     is($foo2->flarg, $foo1->flarg, 'flarg matches on object');
     is($foo2->zarp, $foo1->zarp, 'zarp matches on object');
 }
@@ -205,6 +210,37 @@ catch
 {
     fail($_);
 };
+
+my $fail = 0;
+try
+{
+    my $morpher = Data::Morph->new(
+        recto => $obj_backend,
+        verso => $raw_backend,
+        map => $map5
+    );
+
+    my $foo1 = Foo->new();
+    my $hash = $morpher->morph($foo1);
+    
+    $fail = 1;
+}
+catch
+{
+    if($_ =~ m/Alternations/)
+    {
+        pass('Got the correct error when attempting to use an alternation for writing');
+    }
+    else
+    {
+        fail($_);
+    }
+};
+
+if($fail)
+{
+    fail('Alternations should not be allowed for writes');
+}
 
 try
 {

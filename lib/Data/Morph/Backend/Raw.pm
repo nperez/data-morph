@@ -39,7 +39,21 @@ with 'Data::Morph::Role::Backend' =>
     get_val => sub
     {
         my ($obj, $key) = @_;
-        my @refs = dpath($key)->match($obj);
+        my @keys = split('\|', $key);
+        my @refs;
+
+        if(scalar(@keys) > 1)
+        {
+            foreach my $alt (@keys)
+            {
+                @refs = dpath($alt)->match($obj);
+                last if scalar(@refs);
+            }
+        }
+        else
+        {
+            @refs = dpath($key)->match($obj);
+        }
 
         die "No matching points for key '$key' in: \n". dump($obj)
             unless scalar(@refs);
@@ -52,6 +66,12 @@ with 'Data::Morph::Role::Backend' =>
     set_val => sub
     {
         my ($obj, $key, $val) = @_;
+
+        if(index($key, '|') > -1)
+        {
+            die "Alternations are not supported for write directives: '$key'"
+        }
+
         my @refs = dpathr($key)->match($obj);
 
         die "Too many maching points for '$key' in: \n". dump($obj)
@@ -118,7 +138,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Data::Morph::Backend::Raw is a backend for L<Data::Morph> that deals with raw Perl hashes. Map directives are more complicated than the other shipped backends like L<Data::Morph::Backend::Object>. The keys should be paths as defined by L<Data::DPath>. Read and write operations can have rather complex dpaths defined for them to set or return values. One special case is when the dpath for a write operation points to a non-existant piece: the substrate is created for you and the value deposited. One caveat is that the path must be dumb simple without fancy filtering. Hash and array access (using the syntax '*[1]') into the path is supported. Please see L<Data::Morph/SYNOPSIS> for an exmaple of a map using the Raw backend.
+Data::Morph::Backend::Raw is a backend for L<Data::Morph> that deals with raw Perl hashes. Map directives are more complicated than the other shipped backends like L<Data::Morph::Backend::Object>. The keys should be paths as defined by L<Data::DPath>. Read and write operations can have rather complex dpaths defined for them to set or return values. There are two special cases: one for read directives and another for write directives. Read directives can accept alternations using pipe (eg. '|') as a delimiter. The rules for alternations are simple: first match wins. If an alternation is attempted in a write directive an exception will be thrown. The other special case is when the dpath for a write operation points to a non-existant piece: the substrate is created for you and the value deposited. One caveat is that the path must be dumb simple without fancy filtering. Hash and array access (using the syntax '*[1]') into the path is supported. Please see L<Data::Morph/SYNOPSIS> for an exmaple of a map using the Raw backend.
 
 =cut
 

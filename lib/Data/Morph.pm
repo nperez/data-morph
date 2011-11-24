@@ -360,7 +360,11 @@ __END__
                 read => ['bar', sub { my ($f) = @_; $f =~ s/\d+//; $f } ],
                 write => [ 'bar', sub { "123".shift(@_) } ], # pre write
             },
-            verso => '/BAR',
+            verso => 
+            {
+                read => '/BAR|/bar',
+                write => '/BAR',
+            },
         },
         {
             recto => 'flarg',

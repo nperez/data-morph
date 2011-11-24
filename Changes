@@ -1,6 +1,7 @@
 Revision history for {{ $dist->name }}: {{ $dist->version }}
 
 {{ $NEXT }}
+        Add support for alternations on read directives for the Raw backend
 
 1.113270  2011-11-23 15:20:25 Europe/Amsterdam
         Add support for array substrate building and the tests for it
